@@ -1,7 +1,7 @@
 FROM alpine:latest
 
-RUN apk update; apk add curl jq skopeo
+RUN apk add --update --no-cache python3 py3-pip && ln -sf python3 /usr/bin/python
 
-COPY getClairResults.sh /
+COPY getClairResults.py /
 
-ENTRYPOINT ["sh", "/getClairResults.sh"]
+ENTRYPOINT ["/usr/bin/python", "/getClairResults.py"]
