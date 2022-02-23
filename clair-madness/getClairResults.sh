@@ -2,11 +2,11 @@
 
 set -e
 
-#NVR spec
-PullSpec=$1
+#SHA
+SHA=$1
 
-#get the digest here
-SHA=$(skopeo inspect -f '{{ .Digest }}' docker://quay.io/$PullSpec)
+#repository
+repo=$2
 
-#get the results from clair here
-curl -H "Content-type: application/json" -XGET https://quay.io/api/v1/repository/$(echo $PullSpec | cut -f1 -d":")/manifest/${SHA//:/%3A}/security?vulnerabilities=true | jq
+#get the results from clair here, sha format needs to be URL decoded hence the string modification
+curl -H "Content-type: application/json" -XGET https://quay.io/api/v1/repository/$repo/manifest/${SHA//:/%3A}/security?vulnerabilities=true | jq

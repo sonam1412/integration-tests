@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk update; apk add curl jq skopeo
+RUN apk update; apk add curl jq
 
 COPY getClairResults.sh /
 
