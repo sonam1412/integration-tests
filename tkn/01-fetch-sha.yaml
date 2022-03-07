@@ -1,0 +1,25 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: fetch-clair-py
+spec:
+  params:
+    - name: sha
+      description: sha of an image
+      default: "sha256:e33c555044f1333032d414fff5cd1ff0d8f9fe7face8fa3bf54b7b996893d79d"
+      type: string
+    - name: repo
+      description: image repository
+      default: "cvpops/test-index"
+      type: string
+  steps:
+    - name: get-vulnerabilities
+      image: quay.io/jsztuka/tester-s:noentryv2
+      args: ['-c', ./getClairResults.py '$(params.sha)' '$(params.repo)' > $(workspaces.task-ws.path)/clair.json]
+  workspaces:
+    - name: task-ws
+#    - name: display-findings
+#      image: bash:latest
+#      script: |
+#        #!/usr/bin/env bash
+#        cat /tekton/results/clair.json

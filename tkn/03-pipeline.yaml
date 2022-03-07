@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: clair-main
+spec:
+  workspaces:
+    - name: ws
+  tasks:
+    - name: first-task-get-clair
+      params:
+        - name: sha
+          value: "sha256:e33c555044f1333032d414fff5cd1ff0d8f9fe7face8fa3bf54b7b996893d79d"
+        - name: repo
+          value: "cvpops/test-index"
+      taskRef:
+        name: fetch-clair-py
+      workspaces:
+        - name: task-ws
+          workspace: ws
+    - name: second-task-display-vulns
+      params:
+        - name: json-file
+          value: clair.json
+      taskRef:
+        name: vulns-clair
+      runAfter:
+        - first-task-get-clair
+      workspaces:
+        - name: last-ws
+          workspace: ws

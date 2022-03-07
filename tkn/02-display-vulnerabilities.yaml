@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: vulns-clair
+spec:
+  params:
+    - name: json-file
+      description: json containing vulnerabilities
+      default: "clair.json"
+      type: string
+  workspaces:
+    - name: task-ws
+  steps:
+    - name: display-vulns
+      image: quay.io/jsztuka/tester-s:noentryv3
+      args: ['-c', ./parse.py '$(workspaces.task-ws.path)/$(params.json-file)']
+#    - name: display-findings
+#      image: bash:latest
+#      script: |
+#        #!/usr/bin/env bash
+#        cat /tekton/results/clair.json
