@@ -1,0 +1,72 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: get-clair-scan
+spec:
+  params:
+    - name: sha
+      description: sha of an image
+      type: string
+    - name: pullspec
+      description: image full name with a tag
+      type: string
+  steps:
+    - name: get-vulnerabilities
+      image: quay.io/redhat-appstudio/hacbs-test:latest
+      script: |
+        #!/usr/bin/env bash
+        temp='$(params.sha)'
+        modifiedSha=${temp//:/%3A}
+        
+        #ugly safety mechanism - need to be improved in future, bleh :(
+        
+        function safety_mechanism {
+
+        #curl request
+        http_code=$(curl -o $(workspaces.clair-ws.path)/clair-result.json -w '%{http_code}' -H "Content-type: application/json" -XGET https://quay.io/api/v1/repository/$(echo '$(params.pullspec)' | sed "s/\(.*\):.*/\1/")/manifest/$modifiedSha/security?vulnerabilities=true)
+        scan_file=$(workspaces.clair-ws.path)/clair-result.json
+        
+        if [[ "$http_code" != "200" ]]
+        then
+          echo "Error, response code is not 200. Response code: $http_code"
+          echo "Body of response: $(cat $scan_file)"
+          rm -f $scan_file
+          exit 0
+        fi
+
+        #scan_file logic
+        if [[ ($(jq '.status' $scan_file) != "scanned") ]]
+        then
+          return 1
+        else
+          return 0
+        fi
+        }
+
+        retval=$(safety_mechanism)
+
+        function retry {
+          local n=0
+          local max=5
+          local delay=2
+          while true; do
+            "$@" && [ retval==0 ]  && break || {
+              if [[ $n -lt $max ]]; then
+                let n++ 
+                echo "Getting clair scan failed, because data were: $(jq '.data' $scan_file). Attempt $n/$max"
+                sleep $delay;
+              else
+                echo "The clair scan has status $(jq '.status' $scan_file) and was not obtained in $n attempts."
+                rm -f $scan_file
+                exit 0
+              fi  
+            }   
+          done
+        }
+
+        retry safety_mechanism
+
+        
+  workspaces:
+    - name: clair-ws

@@ -1,0 +1,16 @@
+---
+ apiVersion: tekton.dev/v1beta1
+ kind: Task
+ metadata:
+   name: skopeo-inspect-image
+ spec:
+   params:
+     - name: sourceImage
+       description: the fully qualified image name
+       type: string
+   steps:
+     - name: inspect-image
+       image: quay.io/redhat-appstudio/hacbs-test:latest
+       script: "skopeo inspect docker://$(inputs.params.sourceImage) > $(workspaces.skopeo-ws.path)/image_inspect.json"
+   workspaces:
+     - name: skopeo-ws

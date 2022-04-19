@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: clair-madness
+spec:
+  workspaces:
+    - name: madness-ws
+  tasks:
+    - name: curl-magic
+      params:
+        - name: pullspec
+          value: jsztuka/tester-s
+        - name: sha
+          value: sha256:07c2a8db4ecff9924b67200180f70aaead669f57b51af708bb9d87357aa1687
+      taskRef:
+        name: get-clair-scan
+      workspaces:
+        - name: clair-ws
+          workspace: madness-ws
+    - name: conftest-magic
+      taskRef:
+        name: conftest-clair
+      runAfter:
+        - curl-magic
+      workspaces:
+        - name: conftest-ws
+          workspace: madness-ws
