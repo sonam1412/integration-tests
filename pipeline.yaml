@@ -5,7 +5,7 @@ metadata:
 spec:
   params:
   - name: username
-    value: beautiful
+    default: beautiful
   tasks:
   - name: task-1
     params:
